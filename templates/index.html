@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Blockchain Production Log (Simulated)</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>Blockchain Production Log (Simulated)</h1>
+        <div class="controls">
+            <input id="stepInput" placeholder="Enter production step" />
+            <button id="addBtn">Add Step</button>
+            <button id="checkBtn">Check Integrity</button>
+            <input id="expN" type="number" value="20" min="1" style="width:80px;" />
+            <input id="tamperId" type="number" value="0" min="0" style="width:80px;" />
+            <button id="runExpBtn">Run Experiment</button>
+        </div>
+        <div id="output"></div>
+        <h2>SQLite Logs</h2>
+        <pre id="sqliteArea"></pre>
+        <h2>Blockchain (Simulated)</h2>
+        <pre id="bcArea"></pre>
+    </div>
+<script>
+async function fetchData(){
+    const r = await fetch('/api/data');
+    const j = await r.json();
+    document.getElementById('sqliteArea').innerText = JSON.stringify(j.sqlite, null, 2);
+    document.getElementById('bcArea').innerText = JSON.stringify(j.blockchain, null, 2);
+}
+document.getElementById('addBtn').onclick = async () => {
+    const step = document.getElementById('stepInput').value.trim();
+    if(!step) return alert('enter step');
+    const res = await fetch('/api/add_step', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({step})});
+    const j = await res.json();
+    document.getElementById('output').innerText = JSON.stringify(j, null, 2);
+    fetchData();
+}
+document.getElementById('checkBtn').onclick = async () => {
+    const res = await fetch('/api/check_integrity');
+    const j = await res.json();
+    document.getElementById('output').innerText = JSON.stringify(j, null, 2);
+}
+document.getElementById('runExpBtn').onclick = async () => {
+    const n = parseInt(document.getElementById('expN').value||20);
+    const tamper = parseInt(document.getElementById('tamperId').value||0);
+    const res = await fetch('/api/experiment', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({num_transactions:n, tamper_after: tamper})});
+    const j = await res.json();
+    document.getElementById('output').innerText = JSON.stringify(j, null, 2);
+    fetchData();
+}
+fetchData();
+</script>
+</body>
+</html>
